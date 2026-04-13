@@ -36,4 +36,8 @@ Because this is a static, client-side only application, there is no build proces
 * **Quick Range Selection:** Click the **✕** on your first page, hold the **SHIFT** key, and click the **✕** on your last page to exclude the entire range instantly. Hover over any excluded page to restore it.
 * **Image Handling:** You can drop photos directly into the workspace. The app will automatically convert them to the correct PDF dimensions and compress them to save space.
 
+* ## ⚠️ Disclaimer
+
+**AI-Generated Project:** Please note that the code, styling, and documentation for this project were primarily generated and refined with the assistance of AI.
+
 This project is open-source.
