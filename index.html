@@ -20,7 +20,6 @@
 
         .container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
 
-        /* Styly pro přetahování souborů */
         .upload-area { background: #ffffff; border: 2px dashed #cbd5e1; padding: 40px 20px; border-radius: 12px; text-align: center; transition: all 0.2s ease; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
         .upload-area:hover { border-color: #3b82f6; background-color: #eff6ff; }
         .upload-area.dragover { border-color: #10b981; background-color: #d1fae5; transform: scale(1.02); border-width: 3px; }
@@ -47,7 +46,6 @@
         .page-wrapper.sortable-ghost canvas { opacity: 0; }
         .page-wrapper.sortable-chosen { cursor: grabbing; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); transform: scale(1.02); z-index: 10; border-color: #3b82f6; }
 
-        /* UPRAVENO: Styly pro smazanou stránku a tlačítko Restore */
         .page-wrapper.deleted { opacity: 0.5; filter: grayscale(100%); cursor: pointer; transform: none !important; box-shadow: none !important; border-color: #e2e8f0; transition: opacity 0.2s ease; }
         .page-wrapper.deleted:hover { opacity: 0.8; }
         .page-wrapper.deleted::after { display: none; }
@@ -110,6 +108,20 @@
         .btn-main:disabled { background-color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
 
         #status { font-size: 14px; font-weight: 600; margin-top: 8px; text-align: right; display: block; position: absolute; right: 20px; bottom: -5px; }
+
+        @media (max-width: 768px)
+            {
+            .btn-action { opacity: 1 !important; transform: scale(1) !important; width: 36px; height: 36px; font-size: 16px; }
+            .page-wrapper.deleted .btn-delete { opacity: 1 !important; transform: translate(-50%, -50%) scale(1) !important; }
+            .page-wrapper { width: 45%; max-width: 160px; }
+            #pages-grid { gap: 16px; }
+            .action-bar-content { flex-direction: column; gap: 12px; padding: 0 15px; }
+            .btn-main { width: 100%; justify-content: center; padding: 15px; font-size: 16px; }
+            #status { position: static; text-align: center; margin-top: 5px; }
+            .header h1 { font-size: 24px; }
+            .upload-btn { width: 100%; justify-content: center; }
+            .workspace-toolbar { justify-content: center; }
+            }
     </style>
 </head>
 <body>
