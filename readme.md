@@ -30,7 +30,7 @@ Because this is a static, client-side only application, there is no build proces
 ### Local Usage
 1. Clone this repository or download the `index.html` file.
 2. Double-click `index.html` to open it in any modern web browser.
-3. Start editing your PDFs!
+3. Start editing your PDFs
 
 ## Usage Tips
 * **Quick Range Selection:** Click the **✕** on your first page, hold the **SHIFT** key, and click the **✕** on your last page to exclude the entire range instantly. Hover over any excluded page to restore it.
