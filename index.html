@@ -35,7 +35,6 @@
         .workspace-toolbar { display: none; justify-content: flex-end; gap: 10px; margin-bottom: 20px; padding: 10px 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .toolbar-btn { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .toolbar-btn:hover { background: #e2e8f0; color: #0f172a; }
-        .toolbar-text { margin-right: auto; align-self: center; color: #475569; font-size: 14px; background: #f8fafc; padding: 6px 12px; border-radius: 6px; border: 1px dashed #cbd5e1; }
 
         #pages-grid { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
         
@@ -79,15 +78,8 @@
             opacity: 0; 
             white-space: nowrap;
         }
-        .page-wrapper.deleted:hover .btn-delete {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-        }
-        .page-wrapper.deleted .btn-delete:hover {
-            background-color: #059669;
-            transform: translate(-50%, -50%) scale(1.05) !important;
-        }
+        .page-wrapper.deleted:hover .btn-delete { opacity: 1; transform: translate(-50%, -50%) scale(1); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+        .page-wrapper.deleted .btn-delete:hover { background-color: #059669; transform: translate(-50%, -50%) scale(1.05) !important; }
 
         .btn-rotate { top: -10px; left: -10px; color: #3b82f6; font-size: 18px; line-height: 1; }
         .btn-rotate:hover { background-color: #eff6ff; border-color: #3b82f6; color: #2563eb; }
@@ -109,17 +101,30 @@
 
         #status { font-size: 14px; font-weight: 600; margin-top: 8px; text-align: right; display: block; position: absolute; right: 20px; bottom: -5px; }
 
+        /* --- MOBILNÍ OPTIMALIZACE --- */
         @media (max-width: 768px) {
-            .btn-action { opacity: 1 !important; transform: scale(1) !important; width: 36px; height: 36px; font-size: 16px; }
-            .page-wrapper.deleted .btn-delete { opacity: 1 !important; transform: translate(-50%, -50%) scale(1) !important; }
-            .page-wrapper { width: 45%; max-width: 160px; }
-            #pages-grid { gap: 16px; }
+            /* Tlačítka jsou větší (Apple standard) a mírně odskočená */
+            .btn-action { opacity: 1 !important; transform: scale(1) !important; width: 44px; height: 44px; font-size: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+            .btn-delete { top: -15px; right: -15px; }
+            .btn-rotate { top: -15px; left: -15px; }
+            .btn-extract { bottom: -15px; right: -15px; }
+            
+            /* Tlačítko restore je větší */
+            .page-wrapper.deleted .btn-delete { opacity: 1 !important; transform: translate(-50%, -50%) scale(1) !important; font-size: 16px; padding: 14px 24px; width: auto; height: auto; }
+            
+            .page-wrapper { width: 45%; max-width: 160px; margin-bottom: 10px; }
+            #pages-grid { gap: 20px 12px; } /* Více místa kvůli velkým tlačítkům */
+            
             .action-bar-content { flex-direction: column; gap: 12px; padding: 0 15px; }
-            .btn-main { width: 100%; justify-content: center; padding: 15px; font-size: 16px; }
+            .btn-main { width: 100%; justify-content: center; padding: 16px; font-size: 16px; }
             #status { position: static; text-align: center; margin-top: 5px; }
             .header h1 { font-size: 24px; }
-            .upload-btn { width: 100%; justify-content: center; }
+            .upload-btn { width: 100%; justify-content: center; padding: 16px; font-size: 16px; }
             .workspace-toolbar { justify-content: center; }
+            
+            /* Skrytí textů, které na mobilu nedávají smysl */
+            .drag-text { display: none; }
+            .desktop-tip { display: none; }
         }
     </style>
 </head>
@@ -127,8 +132,8 @@
 
     <div class="header">
         <h1>PDF & Image Workspace</h1>
-        <p>Merge, reorder, compress, and split documents.<br>
-        <span class="tip-highlight">💡 QUICK SELECTION:</span> Click the <b>✕</b> on your first page, hold the <b>SHIFT</b> key, and click the <b>✕</b> on your last page to select the whole range.</p>
+        <p>Merge, reorder, compress, and split documents.<br class="desktop-tip">
+        <span class="desktop-tip"><span class="tip-highlight">💡 QUICK SELECTION:</span> Click the <b>✕</b> on your first page, hold the <b>SHIFT</b> key, and click the <b>✕</b> on your last page to select the whole range.</span></p>
     </div>
 
     <div class="container">
@@ -234,6 +239,11 @@
                 ghostClass: 'sortable-ghost', 
                 chosenClass: 'sortable-chosen', 
                 forceFallback: false,
+                // NOVÉ: Vyladění chování na mobilních telefonech
+                filter: '.btn-action', // Kliknutí na tlačítka nezačne přesouvat dokument
+                preventOnFilter: false, // Umožní proklik tlačítka
+                delay: 150, // Krátké zpoždění před přesunem (nutné pro mobily)
+                delayOnTouchOnly: true, // Zpoždění platí jen pro dotyk, na počítači je okamžité
                 onEnd: function () { 
                     updatePageCount(); 
                     lastToggledIndex = -1; 
