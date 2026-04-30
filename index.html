@@ -345,6 +345,24 @@
             updatePageCount();
         }
 
+        function clearWorkspace() {
+            loadedPdfJsDocs.forEach(doc => {
+                if (doc) doc.destroy();
+            });
+
+            loadedPdfDocs = [];
+            loadedPdfJsDocs = [];
+            lastToggledIndex = -1;
+
+            const grid = document.getElementById('pages-grid');
+            grid.innerHTML = '';
+            
+            const fileInput = document.getElementById('fileInput');
+            fileInput.value = "";
+
+            updatePageCount();
+        }
+
         function toggleDelete(btn, event) {
             const wrapper = btn.closest('.page-wrapper');
             const allWrappers = Array.from(document.querySelectorAll('.page-wrapper'));
