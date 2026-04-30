@@ -101,28 +101,20 @@
 
         #status { font-size: 14px; font-weight: 600; margin-top: 8px; text-align: right; display: block; position: absolute; right: 20px; bottom: -5px; }
 
-        /* --- MOBILNÍ OPTIMALIZACE --- */
         @media (max-width: 768px) {
-            /* Tlačítka jsou větší (Apple standard) a mírně odskočená */
             .btn-action { opacity: 1 !important; transform: scale(1) !important; width: 44px; height: 44px; font-size: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
             .btn-delete { top: -15px; right: -15px; }
             .btn-rotate { top: -15px; left: -15px; }
             .btn-extract { bottom: -15px; right: -15px; }
-            
-            /* Tlačítko restore je větší */
             .page-wrapper.deleted .btn-delete { opacity: 1 !important; transform: translate(-50%, -50%) scale(1) !important; font-size: 16px; padding: 14px 24px; width: auto; height: auto; }
-            
             .page-wrapper { width: 45%; max-width: 160px; margin-bottom: 10px; }
-            #pages-grid { gap: 20px 12px; } /* Více místa kvůli velkým tlačítkům */
-            
+            #pages-grid { gap: 20px 12px; } 
             .action-bar-content { flex-direction: column; gap: 12px; padding: 0 15px; }
             .btn-main { width: 100%; justify-content: center; padding: 16px; font-size: 16px; }
             #status { position: static; text-align: center; margin-top: 5px; }
             .header h1 { font-size: 24px; }
             .upload-btn { width: 100%; justify-content: center; padding: 16px; font-size: 16px; }
             .workspace-toolbar { justify-content: center; }
-            
-            /* Skrytí textů, které na mobilu nedávají smysl */
             .drag-text { display: none; }
             .desktop-tip { display: none; }
         }
@@ -152,7 +144,7 @@
         <div class="workspace-toolbar" id="workspaceToolbar">
             <button class="toolbar-btn" onclick="bulkAction(true)">☑ Include All</button>
             <button class="toolbar-btn" onclick="bulkAction(false)">☒ Exclude All</button>
-            <button class="toolbar-btn" style="color: #ef4444; border-color: #fca5a5;" onclick="clearWorkspace()">Clear Workspace</button>
+            <button class="toolbar-btn" style="color: #ef4444; border-color: #fca5a5;" onclick="clearWorkspace()">🗑 Clear Workspace</button>
         </div>
 
         <div id="pages-grid"></div>
@@ -180,9 +172,27 @@
         let sortableInstance = null; 
         let lastToggledIndex = -1; 
 
+        // 1. ZDE JE PŘIDÁNA FUNKCE CLEAR WORKSPACE DO GLOBÁLNÍHO PROSTORU
+        function clearWorkspace() {
+            loadedPdfJsDocs.forEach(doc => {
+                if (doc) doc.destroy();
+            });
+
+            loadedPdfDocs = [];
+            loadedPdfJsDocs = [];
+            lastToggledIndex = -1;
+
+            const grid = document.getElementById('pages-grid');
+            grid.innerHTML = '';
+            
+            const fileInput = document.getElementById('fileInput');
+            fileInput.value = "";
+
+            updatePageCount();
+        }
+
         const pageObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(async (entry) => {
-
                 if (entry.isIntersecting) {
                     const wrapper = entry.target;
                     const canvas = wrapper.querySelector('canvas');
@@ -194,7 +204,7 @@
 
                     try {
                         const pdfJsDoc = loadedPdfJsDocs[fileIdx];
-                        if (!pdfJsDoc) return; // Pojistka
+                        if (!pdfJsDoc) return; 
 
                         const page = await pdfJsDoc.getPage(pageNum);
                         const context = canvas.getContext('2d');
@@ -234,13 +244,8 @@
             dropZone.addEventListener(eventName, unhighlight, false);
         });
 
-        function highlight(e) {
-            dropZone.classList.add('dragover');
-        }
-
-        function unhighlight(e) {
-            dropZone.classList.remove('dragover');
-        }
+        function highlight(e) { dropZone.classList.add('dragover'); }
+        function unhighlight(e) { dropZone.classList.remove('dragover'); }
 
         dropZone.addEventListener('drop', handleDrop, false);
 
@@ -275,11 +280,10 @@
                 ghostClass: 'sortable-ghost', 
                 chosenClass: 'sortable-chosen', 
                 forceFallback: false,
-                // NOVÉ: Vyladění chování na mobilních telefonech
-                filter: '.btn-action', // Kliknutí na tlačítka nezačne přesouvat dokument
-                preventOnFilter: false, // Umožní proklik tlačítka
-                delay: 150, // Krátké zpoždění před přesunem (nutné pro mobily)
-                delayOnTouchOnly: true, // Zpoždění platí jen pro dotyk, na počítači je okamžité
+                filter: '.btn-action',
+                preventOnFilter: false, 
+                delay: 150, 
+                delayOnTouchOnly: true, 
                 onEnd: function () { 
                     updatePageCount(); 
                     lastToggledIndex = -1; 
@@ -345,24 +349,6 @@
             updatePageCount();
         }
 
-        function clearWorkspace() {
-            loadedPdfJsDocs.forEach(doc => {
-                if (doc) doc.destroy();
-            });
-
-            loadedPdfDocs = [];
-            loadedPdfJsDocs = [];
-            lastToggledIndex = -1;
-
-            const grid = document.getElementById('pages-grid');
-            grid.innerHTML = '';
-            
-            const fileInput = document.getElementById('fileInput');
-            fileInput.value = "";
-
-            updatePageCount();
-        }
-
         function toggleDelete(btn, event) {
             const wrapper = btn.closest('.page-wrapper');
             const allWrappers = Array.from(document.querySelectorAll('.page-wrapper'));
@@ -424,41 +410,12 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', 0.75);
-                };
-                img.onerror = (err) => reject(err);
-            });
-        }
-
-        async function compressImageFile(file) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.src = URL.createObjectURL(file);
-                
-                img.onload = () => {
-                    const MAX_DIMENSION = 1500;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
-                        const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
-                        width = width * ratio;
-                        height = height * ratio;
-                    }
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
                     if (file.type === 'image/png') {
                         canvas.toBlob((blob) => { resolve(blob); }, 'image/png');
                     } else {
                         canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', 0.75);
                     }
                 };
-
                 img.onerror = () => reject(new Error("Failed to load image"));
             });
         }
