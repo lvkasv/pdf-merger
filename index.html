@@ -173,10 +173,45 @@
 
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'lib/pdf.worker.min.js';
-        
+
         let loadedPdfDocs = []; 
+        let loadedPdfJsDocs = [];
         let sortableInstance = null; 
         let lastToggledIndex = -1; 
+
+        const pageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(async (entry) => {
+
+                if (entry.isIntersecting) {
+                    const wrapper = entry.target;
+                    const canvas = wrapper.querySelector('canvas');
+                    
+                    if (canvas.dataset.loaded === "true") return;
+
+                    const fileIdx = parseInt(wrapper.dataset.fileIndex);
+                    const pageNum = parseInt(wrapper.dataset.pageIndex) + 1;
+
+                    try {
+                        const pdfJsDoc = loadedPdfJsDocs[fileIdx];
+                        if (!pdfJsDoc) return; // Pojistka
+
+                        const page = await pdfJsDoc.getPage(pageNum);
+                        const context = canvas.getContext('2d');
+                        const viewport = page.getViewport({ scale: 0.4 }); 
+                        
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        await page.render({ canvasContext: context, viewport: viewport }).promise;
+                        
+                        canvas.dataset.loaded = "true";
+                        observer.unobserve(wrapper);
+                    } catch (err) {
+                        console.error("Chyba při vykreslování stránky", err);
+                    }
+                }
+            });
+        }, { rootMargin: '200px' });
 
         const dropZone = document.getElementById('dropZone');
 
@@ -399,26 +434,28 @@
                     const isPdf = file.type === 'application/pdf' || fileName.endsWith('.pdf');
                     const isImg = file.type.startsWith('image/') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png');
 
-                    if (isPdf) {
-                        const pdfLibDoc = await PDFDocument.load(arrayBuffer);
-                        loadedPdfDocs.push(pdfLibDoc);
+            if (isPdf) {
+                    const pdfLibDoc = await PDFDocument.load(arrayBuffer);
+                    loadedPdfDocs.push(pdfLibDoc);
 
-                        const pdfJsDoc = await pdfjsLib.getDocument(new Uint8Array(arrayBuffer)).promise;
+                    const pdfJsDoc = await pdfjsLib.getDocument(new Uint8Array(arrayBuffer)).promise;
+                    loadedPdfJsDocs[absoluteFileIndex] = pdfJsDoc;
 
-                        for (let pageNum = 1; pageNum <= pdfJsDoc.numPages; pageNum++) {
-                            const page = await pdfJsDoc.getPage(pageNum);
-                            const canvas = document.createElement('canvas');
-                            const context = canvas.getContext('2d');
-                            const viewport = page.getViewport({ scale: 0.4 }); 
-                            canvas.height = viewport.height;
-                            canvas.width = viewport.width;
+                for (let pageNum = 1; pageNum <= pdfJsDoc.numPages; pageNum++) {
+                    const canvas = document.createElement('canvas');
+                    canvas.dataset.loaded = "false";
+            
+                    canvas.width = 150; 
+                    canvas.height = 200;
 
-                            await page.render({ canvasContext: context, viewport: viewport }).promise;
-
-                            const wrapper = createPageUI(absoluteFileIndex, pageNum, canvas, false, `File ${absoluteFileIndex + 1} - Pg ${pageNum}`);
-                            grid.appendChild(wrapper); 
-                        }
-                    } 
+                    const wrapper = createPageUI(absoluteFileIndex, pageNum, canvas, false, `File ${absoluteFileIndex + 1} - Pg ${pageNum}`);
+                    grid.appendChild(wrapper); 
+                    
+                    pageObserver.observe(wrapper);
+                    
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            }
                     else if (isImg) {
                         const compressedBlob = await compressImageFile(file);
                         const compressedArrayBuffer = await compressedBlob.arrayBuffer();
