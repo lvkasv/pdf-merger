@@ -144,7 +144,7 @@
         <div class="workspace-toolbar" id="workspaceToolbar">
             <button class="toolbar-btn" onclick="bulkAction(true)">☑ Include All</button>
             <button class="toolbar-btn" onclick="bulkAction(false)">☒ Exclude All</button>
-            <button class="toolbar-btn" style="color: #ef4444; border-color: #fca5a5;" onclick="clearWorkspace()">🗑 Clear Workspace</button>
+            <button class="toolbar-btn" style="color: #ef4444; border-color: #fca5a5;" onclick="clearWorkspace()">Clear Workspace</button>
         </div>
 
         <div id="pages-grid"></div>
@@ -172,16 +172,29 @@
         let sortableInstance = null; 
         let lastToggledIndex = -1; 
 
-        // 1. ZDE JE PŘIDÁNA FUNKCE CLEAR WORKSPACE DO GLOBÁLNÍHO PROSTORU
         function clearWorkspace() {
+            // 1. Zničení instancí pdf.js
             loadedPdfJsDocs.forEach(doc => {
                 if (doc) doc.destroy();
             });
 
+            // 2. Zastavení hlídače scrollování, aby nedržel staré prvky
+            if (typeof pageObserver !== 'undefined' && pageObserver) {
+                pageObserver.disconnect();
+            }
+
+            // 3. Zničení nástroje pro přesouvání
+            if (sortableInstance) {
+                sortableInstance.destroy();
+                sortableInstance = null;
+            }
+
+            // 4. Vymazání těžkých datových polí
             loadedPdfDocs = [];
             loadedPdfJsDocs = [];
             lastToggledIndex = -1;
 
+            // 5. Smazání HTML z obrazovky a reset nahrávání
             const grid = document.getElementById('pages-grid');
             grid.innerHTML = '';
             
@@ -190,7 +203,6 @@
 
             updatePageCount();
         }
-
         const pageObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(async (entry) => {
                 if (entry.isIntersecting) {
@@ -389,34 +401,46 @@
         }
 
         async function compressImageFile(file) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.src = URL.createObjectURL(file);
-                
-                img.onload = () => {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    // 1. Dekódování obrázku na pozadí (neblokuje UI a je mnohem rychlejší)
+                    const bitmap = await createImageBitmap(file);
+                    
                     const MAX_DIMENSION = 1500;
-                    let width = img.width;
-                    let height = img.height;
+                    let width = bitmap.width;
+                    let height = bitmap.height;
 
+                    // 2. Výpočet nových rozměrů
                     if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
                         const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
                         width = width * ratio;
                         height = height * ratio;
                     }
 
+                    // 3. Příprava plátna
                     const canvas = document.createElement('canvas');
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
                     
+                    // BONUS: Zapnutí kvalitnějšího vyhlazování pro hezčí zmenšené fotky
+                    ctx.imageSmoothingQuality = 'high'; 
+                    
+                    // 4. Vykreslení zmenšeného obrázku
+                    ctx.drawImage(bitmap, 0, 0, width, height);
+                    
+                    // 5. UVOLNĚNÍ PAMĚTI - okamžitě zničíme originální velký obrázek z RAM
+                    bitmap.close();
+                    
+                    // 6. Uložení se zachováním průhlednosti (PNG) nebo kompresí (JPEG)
                     if (file.type === 'image/png') {
                         canvas.toBlob((blob) => { resolve(blob); }, 'image/png');
                     } else {
                         canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', 0.75);
                     }
-                };
-                img.onerror = () => reject(new Error("Failed to load image"));
+                } catch (err) {
+                    reject(new Error("Failed to process image: " + err.message));
+                }
             });
         }
 
