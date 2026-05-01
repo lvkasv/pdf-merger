@@ -4,8 +4,6 @@
 
 A lightweight, serverless web application that lets you effortlessly manage your PDF files and images. Merge, reorder, compress, and split documents entirely within your browser. 
 
-Since there is no backend server and all libraries are hosted locally, your files never leave your device. The app works **100% offline**, ensuring complete privacy, security, and lightning-fast performance.
-
 ## Features
 
 * **Drag & Drop Uploads:** Easily add `.pdf`, `.jpg`, `.jpeg`, and `.png` files.
@@ -34,7 +32,7 @@ Because this is a static, client-side only application, there is no build proces
 ### Local Usage
 1. Clone this repository or download the entire project folder as a `.zip` (make sure the `lib` folder is kept in the same directory as the `index.html` file).
 2. Double-click `index.html` to open it in any modern web browser.
-3. Start editing your PDFs even without an internet connection!
+3. Start editing your PDFs even without an internet connection.
 
 ## Usage Tips
 * **Quick Range Selection:** Click the **✕** on your first page, hold the **SHIFT** key, and click the **✕** on your last page to exclude the entire range instantly. Hover over any excluded page to restore it.
