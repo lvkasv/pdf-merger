@@ -173,31 +173,49 @@
         let lastToggledIndex = -1; 
 
         function clearWorkspace() {
-            loadedPdfJsDocs.forEach(doc => {
-                if (doc) doc.destroy();
-            });
-
-            if (typeof pageObserver !== 'undefined' && pageObserver) {
-                pageObserver.disconnect();
-            }
-
-            if (sortableInstance) {
-                sortableInstance.destroy();
-                sortableInstance = null;
-            }
-
-            loadedPdfDocs = [];
-            loadedPdfJsDocs = [];
-            lastToggledIndex = -1;
-
-            const grid = document.getElementById('pages-grid');
-            grid.innerHTML = '';
-            
-            const fileInput = document.getElementById('fileInput');
-            fileInput.value = "";
-
-            updatePageCount();
+    loadedPdfJsDocs.forEach(doc => {
+        try {
+            if (doc) doc.destroy();
+        } catch (e) {
+            console.warn("Chyba při uvolňování PDF.js dokumentu:", e);
         }
+    });
+
+    if (typeof pageObserver !== 'undefined' && pageObserver) {
+        pageObserver.disconnect();
+    }
+
+    if (sortableInstance) {
+        sortableInstance.destroy();
+        sortableInstance = null;
+    }
+
+    const grid = document.getElementById('pages-grid');
+    if (grid) {
+        const canvases = grid.querySelectorAll('canvas');
+        canvases.forEach(canvas => {
+            canvas.width = 0;
+            canvas.height = 0;
+            
+            const gl = canvas.getContext('webgl') || canvas.getContext('2d');
+            if (gl && typeof gl.getExtension === 'function') {
+                const loseContext = gl.getExtension('WEBGL_lose_context');
+                if (loseContext) loseContext.loseContext();
+            }
+        });
+        
+        grid.innerHTML = '';
+    }
+
+    loadedPdfDocs = [];
+    loadedPdfJsDocs = [];
+    lastToggledIndex = -1;
+
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) fileInput.value = "";
+    updatePageCount();
+}
+
         const pageObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(async (entry) => {
                 if (entry.isIntersecting) {
